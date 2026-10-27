@@ -16,8 +16,11 @@ def load_data():
 
 st.title("🎯 Kantitatif Hisse & Ekstrem Durum Radarı")
 
-try: df = load_data()
-except Exception: st.error("Veritabanına bağlanılamadı. Lütfen bekleyin veya botu çalıştırın."); st.stop()
+try: 
+    df = load_data()
+except Exception as e: 
+    st.error(f"Gerçek Hata Detayı: {e}")
+    st.stop()()
 
 son_gun = df['date'].max()
 guncel_df = df[df['date'] == son_gun].copy()
