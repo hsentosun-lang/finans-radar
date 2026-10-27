@@ -71,6 +71,11 @@ def update_data():
             if result == 0:
                 data = yf.download(ticker, period="3y", progress=False)
                 if data.empty: continue
+                
+                # YFINANCE GÜNCELLEMESİ İÇİN DÜZELTME (MultiIndex Flatten)
+                if isinstance(data.columns, pd.MultiIndex):
+                    data.columns = data.columns.get_level_values(0)
+                    
                 new_data = calculate_indicators(data).dropna(subset=['percentile_rank', 'sma_200'])
             else:
                 query = f"SELECT date, close, high, low, volume FROM market_data WHERE ticker = '{ticker}' ORDER BY date DESC LIMIT 300"
@@ -79,7 +84,13 @@ def update_data():
                 db_data['date'] = pd.to_datetime(db_data['date'])
                 db_data = db_data.sort_values('date').set_index('date')
                 
-                recent_yf = yf.download(ticker, period="5d", progress=False)[['Close', 'High', 'Low', 'Volume']]
+                recent_yf = yf.download(ticker, period="5d", progress=False)
+                
+                # YFINANCE GÜNCELLEMESİ İÇİN DÜZELTME
+                if isinstance(recent_yf.columns, pd.MultiIndex):
+                    recent_yf.columns = recent_yf.columns.get_level_values(0)
+                    
+                recent_yf = recent_yf[['Close', 'High', 'Low', 'Volume']]
                 combined = pd.concat([db_data, recent_yf])
                 combined = combined[~combined.index.duplicated(keep='last')].sort_index()
                 
